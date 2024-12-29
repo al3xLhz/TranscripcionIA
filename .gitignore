@@ -1,3 +1,5 @@
 .venv/
 .env
 Dockerfile
+.temp.wav
+audios/audio.mp3

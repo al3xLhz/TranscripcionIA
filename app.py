@@ -5,7 +5,7 @@ import time
 
 start_time = time.time()
 # Cargar el archivo de audio
-audio_path = "./audios/audiowsp.mp3"
+audio_path = "./audios/audio.mp3"
 
 audio = AudioSegment.from_file(audio_path)
 
@@ -17,7 +17,8 @@ nonsilent_ranges = detect_nonsilent(audio, min_silence_len=1000, silence_thresh=
 
 # Cargar el modelo de Whisper
 #model = whisper.load_model("base", device="cuda")
-model = whisper.load_model("medium", device="cuda")
+#model = whisper.load_model("medium", device="cuda")
+model = whisper.load_model("medium")
 
 # Transcribir solo las partes con voz
 transcriptions = []
