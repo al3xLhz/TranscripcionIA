@@ -10,6 +10,7 @@ import warnings
 from scipy.io import wavfile
 import noisereduce as nr
 from tkinter import messagebox
+import torch
 
 
 def rename_file(file_path):
@@ -23,7 +24,7 @@ def rename_file(file_path):
 def get_audiofile():
     input_file = askopenfilename(
         title="Selecciona el archivo M4A",
-        filetypes=[("Archivos de audio", "*.m4a *.mp3 *.opus *.dat.unknown")]
+        filetypes=[("Archivos de audio", "*.m4a *.mp3 *.opus *.dat.unknown *.ogg")]
         #multiple=True devolverá una tupla con las rutas de los archivos seleccionados.
     )
     # Si no se seleccionó un archivo, salir
@@ -51,11 +52,20 @@ def convertir_m4a_a_mp3(input_file):
 
     return audio_path
 
+def convertir_ogg_a_mp3(input_file):
+    audio = AudioSegment.from_file(input_file, format="ogg")
+    audio.export("audioTemporal.mp3", format="mp3")
+    audio_path = os.path.join(os.getcwd(), "audioTemporal.mp3")
+
+    return audio_path
+
 def audio_to_mp3(audio_path):
     if audio_path.endswith(".m4a"):
         return convertir_m4a_a_mp3(audio_path)
     elif audio_path.endswith(".opus"):
         return convertir_opus_a_mp3(audio_path)
+    elif audio_path.endswith(".ogg"):
+        return convertir_ogg_a_mp3(audio_path)
     elif audio_path.endswith(".mp3"):
         print(audio_path)
         return audio_path
@@ -97,7 +107,8 @@ def transcribir():
     audio_path = get_audiofile()
     audio_path_mp3= audio_to_mp3(audio_path)
     audio = AudioSegment.from_file(audio_path_mp3)
-
+    print(torch.cuda.is_available())  # Esto debe devolver True.
+    print(torch.cuda.get_device_name(0))
     # Eliminar el ruido ambiental
     #audio = eliminar_ruido(audio)
     
@@ -113,8 +124,8 @@ def transcribir():
 
     # Cargar el modelo de Whisper
     #model = whisper.load_model("base", device="cuda")
-    #model = whisper.load_model("medium", device="cuda")
-    model = whisper.load_model("medium")
+    model = whisper.load_model("medium", device="cuda")
+    #model = whisper.load_model("medium")
 
     # Transcribir solo las partes con voz
     transcriptions = []
@@ -154,12 +165,14 @@ def transcribir():
     execution_time = end_time - start_time
 
     print(f"Tiempo total de ejecución: {execution_time} segundos")
-    #label.config(text=f"Transcripción final: {transcripcion_final}")
-    messagebox.showinfo("",transcripcion_final)
+    #messagebox.showinfo("",transcripcion_final)
 
 
 
 def main():
+
+    transcribir()
+    return
     global label
     # Crear la ventana principal
     root = tk.Tk()
