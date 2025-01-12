@@ -104,6 +104,8 @@ def eliminar_ruido(audio_segment):
 def transcribir():
     start_time = time.time()
     # Cargar el archivo de audio
+
+    
     audio_path = get_audiofile()
     audio_path_mp3= audio_to_mp3(audio_path)
     audio = AudioSegment.from_file(audio_path_mp3)
