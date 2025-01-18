@@ -11,6 +11,7 @@ from scipy.io import wavfile
 import noisereduce as nr
 from tkinter import messagebox
 import torch
+from pathlib import Path
 
 
 def rename_file(file_path):
@@ -30,8 +31,8 @@ def get_audiofile():
     # Si no se seleccionó un archivo, salir
     if not input_file:
         print("No se seleccionó ningún archivo.")
-        return
-    
+        return None
+
     audio_file = rename_file(input_file)
 
     return audio_file
@@ -102,32 +103,62 @@ def eliminar_ruido(audio_segment):
 
 # Función que será ejecutada al presionar el botón
 def transcribir():
-    start_time = time.time()
-    # Cargar el archivo de audio
 
-    
     audio_path = get_audiofile()
+
+    if audio_path is None:
+        return
+
+    start_time = time.time()
     audio_path_mp3= audio_to_mp3(audio_path)
-    audio = AudioSegment.from_file(audio_path_mp3)
-    print(torch.cuda.is_available())  # Esto debe devolver True.
-    print(torch.cuda.get_device_name(0))
-    # Eliminar el ruido ambiental
-    #audio = eliminar_ruido(audio)
-    
+    print(audio_path_mp3)
+    #audio = AudioSegment.from_file(audio_path_mp3)
+    #print(torch.cuda.is_available())  # Esto debe devolver True.
+    #print(torch.cuda.get_device_name(0))
+
     # Detectar las partes donde hay audio (en milisegundos)
-    nonsilent_ranges = detect_nonsilent(audio, min_silence_len=1000, silence_thresh=-40)
+    #nonsilent_ranges = detect_nonsilent(audio, min_silence_len=1000, silence_thresh=-40)
 
     # Mostrar los intervalos con audio
     #print("Rangos de audio detectados:", nonsilent_ranges)
 
     # Suprimir advertencias específicas
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
+    #warnings.filterwarnings("ignore", category=FutureWarning)
+    #warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
     # Cargar el modelo de Whisper
     #model = whisper.load_model("base", device="cuda")
-    model = whisper.load_model("medium", device="cuda")
+    model = whisper.load_model("turbo", device="cuda")
+    #model = whisper.load_model("large")
     #model = whisper.load_model("medium")
+    
+    # Exportar el audio completo a un archivo temporal
+        #audio.export("temp.wav", format="wav")
+    # Transcribir el audio completo
+    #result = model.transcribe("temp.wav", language="es")
+    result = model.transcribe(audio_path_mp3)
+    transcripcion_final = result["text"]
+    print(f"Transcripción final: \033[1m{transcripcion_final}\033[0m")
+
+    end_time = time.time()
+
+    execution_time = end_time - start_time
+
+    print(f"Tiempo total de ejecución: {execution_time} segundos")
+
+    # Borrar el archivo temporal
+    temp_file = "temp.wav"
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
+        #print(f"Archivo temporal '{temp_file}' borrado.")
+    # Borrar el archivo temporal
+    audio_temp_file = "audioTemporal.mp3"
+    if os.path.exists(audio_temp_file):
+        os.remove(audio_temp_file)
+        #print(f"Archivo temporal '{audio_temp_file}' borrado.")
+    end_time = time.time()
+
+    return
 
     # Transcribir solo las partes con voz
     transcriptions = []
@@ -139,7 +170,8 @@ def transcribir():
         audio_chunk.export("temp.wav", format="wav")
 
         # Transcribir
-        result = model.transcribe("temp.wav", language="es")
+        result = model.transcribe("temp.wav")
+        #result = model.transcribe("temp.wav", language="es")
         transcriptions.append(result["text"])
 
         # Mostrar progreso manual
@@ -174,7 +206,14 @@ def transcribir():
 def main():
 
     transcribir()
-    return
+
+
+
+
+
+
+
+    """
     global label
     # Crear la ventana principal
     root = tk.Tk()
@@ -210,7 +249,7 @@ def main():
     # Iniciar el bucle principal de la aplicación
     root.mainloop()
     
-    return
+    """
     
 
 if __name__ == "__main__":
