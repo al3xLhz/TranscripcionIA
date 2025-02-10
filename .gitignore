@@ -1,5 +1,6 @@
 .venv/
 .env
 Dockerfile
-.temp.wav
+__pycache__*
+
 
