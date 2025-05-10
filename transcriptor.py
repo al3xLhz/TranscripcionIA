@@ -5,22 +5,29 @@ import whisper
 import time
 import warnings
 import keyboard
-from utils import get_audiofile, audio_to_mp3
+from utils import audio_to_mp3#import get_audiofile, audio_to_mp3
 import wave
 import keyboard
 from utils import limpiar_consola
+import torch
 
 
 
 class TranscriptorIA():
     def __init__(self):
         self.modelo = "turbo"
-        self.dispositivo = "cuda"
+        self.dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Función que será ejecutada al presionar el botón
     def transcribir_archivo(self):
 
-        audio_path = get_audiofile()
+        #audio_path = get_audiofile()
+        audio_folder = "Audio"
+        audio_files = [f for f in os.listdir(audio_folder) if os.path.isfile(os.path.join(audio_folder, f))]
+        if not audio_files:
+            print("No audio files found in Audio folder")
+            return
+        audio_path = os.path.join(audio_folder, audio_files[0])
 
         self.transcribir(audio_path)
 
