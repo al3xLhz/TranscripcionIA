@@ -1,5 +1,4 @@
 from pydub import AudioSegment
-#from tkinter.filedialog import askopenfilename
 import os
 
 def rename_file(file_path):
@@ -9,22 +8,7 @@ def rename_file(file_path):
         print(f"Archivo renombrado a: {new_file_path}")
         return new_file_path
     return file_path
-"""
-def get_audiofile():
-    input_file = askopenfilename(
-        title="Selecciona el archivo M4A",
-        filetypes=[("Archivos de audio", "*.m4a *.mp3 *.opus *.dat.unknown *.ogg")]
-        #multiple=True devolverá una tupla con las rutas de los archivos seleccionados.
-    )
-    # Si no se seleccionó un archivo, salir
-    if not input_file:
-        print("No se seleccionó ningún archivo.")
-        return None
 
-    audio_file = rename_file(input_file)
-
-    return audio_file
-"""
 def convertir_opus_a_mp3(input_file):
 
     audio = AudioSegment.from_file(input_file)
@@ -69,6 +53,3 @@ def audio_to_mp3(audio_path):
     else:
         print("No convirtio nada")
     return "ERROR"
-    
-def limpiar_consola():
-    os.system('cls' if os.name == 'nt' else 'clear')  # 'cls' para Windows, 'clear' para Linux/macOS

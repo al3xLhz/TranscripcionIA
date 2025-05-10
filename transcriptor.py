@@ -1,142 +1,124 @@
 import os
-import pyaudio
-from pydub import AudioSegment
 import whisper
 import time
 import warnings
 #import keyboard
-from utils import audio_to_mp3#import get_audiofile, audio_to_mp3
-import wave
-import keyboard
-from utils import limpiar_consola
+from utils import audio_to_mp3
 import torch
 
-
+# Colores ANSI para terminal
+colors = [
+        "\033[91m",  # Rojo
+        "\033[92m",  # Verde
+        "\033[93m",  # Amarillo
+        "\033[94m",  # Azul
+        "\033[95m",  # Magenta
+        "\033[96m",  # Cian
+        "\033[97m",  # Blanco brillante
+    ]
+reset = "\033[0m"  # Resetear color
+bold = "\033[1m"   # Texto en negrita
 
 class TranscriptorIA():
-    def __init__(self):
-        self.modelo = "turbo"
+    def __init__(self,modelo):
+        self.modelo = modelo
         self.dispositivo = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Función que será ejecutada al presionar el botón
     def transcribir_archivo(self):
 
-        #audio_path = get_audiofile()
         audio_folder = "Audio"
         audio_files = [f for f in os.listdir(audio_folder) if os.path.isfile(os.path.join(audio_folder, f))]
+
         if not audio_files:
             print("No audio files found in Audio folder")
             return
+
+        # Siempre selecciona el primer archivo automáticamente
         audio_path = os.path.join(audio_folder, audio_files[0])
+        print(f"{colors[1]}Archivo seleccionado automáticamente: {bold}{audio_files[0]}{reset}")
 
         self.transcribir(audio_path)
 
+    def transcribir(self,path):
 
-    def record_audio2transc(self):
-        # Configuración de parámetros de grabación
-        FORMAT = pyaudio.paInt16
-        CHANNELS = 1  # Mono
-        RATE = 44100  # Frecuencia de muestreo
-        CHUNK = 1024  # Tamaño del buffer
-        WAV_FILENAME = "grabacion.wav"
-        MP3_FILENAME = "grabacion.mp3"
-
-        # Inicializar PyAudio
-        audio = pyaudio.PyAudio()
-
-        # Configurar flujo de audio
-        stream = audio.open(format=FORMAT, channels=CHANNELS,
-                            rate=RATE, input=True,
-                            frames_per_buffer=CHUNK)
-
-        print("Presiona 'SPACE' para pausar/reanudar, 'ESC' para detener la grabación.")
-
-        frames = []
-        recording = True  # Estado de grabación
-        paused = False    # Estado de pausa
-
-        while recording:
-            if keyboard.is_pressed('esc'):  # Si presiona ESC, detiene la grabación
-                time.sleep(1)
-                limpiar_consola()
-                print("\nGrabación finalizada.")
-                break
-            if keyboard.is_pressed('space'):  # Si presiona SPACE, pausa o reanuda
-                paused = not paused
-                if paused:
-                    print("\n🔴 Grabación en pausa. Presiona 'SPACE' para reanudar.")
-                else:
-                    print("\n🟢 Grabación reanudada.")
-                time.sleep(0.3)
-            
-            if not paused:
-                data = stream.read(CHUNK)
-                frames.append(data)
-
-        # Detener y cerrar el flujo de audio
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
-
-        # Guardar en formato WAV
-        with wave.open(WAV_FILENAME, 'wb') as wf:
-            wf.setnchannels(CHANNELS)
-            wf.setsampwidth(audio.get_sample_size(FORMAT))
-            wf.setframerate(RATE)
-            wf.writeframes(b''.join(frames))
-
-        #print(f"Archivo guardado como {WAV_FILENAME}")
-
-        # Convertir a MP3 usando pydub
-        audio_segment = AudioSegment.from_wav(WAV_FILENAME)
-        audio_segment.export(MP3_FILENAME, format="mp3")
-        #print(f"Archivo convertido a {MP3_FILENAME}")
-
-        if os.path.exists(WAV_FILENAME):
-            os.remove(WAV_FILENAME)
-
-        
-
-        self.transcribir(MP3_FILENAME)
-
-
-        if os.path.exists(MP3_FILENAME):
-            os.remove(MP3_FILENAME)
-
-    def transcribir(self,path = None):
-
-        if path == None:
-            print("No hay nada, viejo")
-            return
-        start_time = time.time()
         audio_path_mp3 = audio_to_mp3(path)
 
         # Suprimir advertencias específicas
         warnings.filterwarnings("ignore", category=FutureWarning)
         warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
-        # Cargar el modelo de Whisper
-        print("El dispositivo es: ",self.dispositivo)
+        # Load Whisper model
+        self._print_device_info()
+        model = self._load_whisper_model()
+
+        start_time = time.time()
         model = whisper.load_model(name=self.modelo, device=self.dispositivo)
 
         # Transcribir el audio completo
-        result = model.transcribe(audio_path_mp3)#, language="es")
-        transcripcion_final = result["text"]
-        print(f"Transcripción final: \033[1m{transcripcion_final}\033[0m")
+        self._perform_transcription(model, audio_path_mp3)
 
-        end_time = time.time()
+        execution_time = time.time() - start_time
+        print(f"Tiempo total de ejecución: {execution_time:.2f} segundos")
 
-        execution_time = end_time - start_time
+        # Clean up temporary files
+        self._cleanup_temp_files()
 
-        print(f"Tiempo total de ejecución: {execution_time} segundos")
+        # Ask user if they want to delete the original file
+        if self._ask_delete_file(path):
+            self._delete_file(path)
 
-        # Borrar el archivo temporal
-        temp_file = "temp.wav"
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-            #print(f"Archivo temporal '{temp_file}' borrado.")
-        # Borrar el archivo temporal
-        audio_temp_file = "audioTemporal.mp3"
-        if os.path.exists(audio_temp_file):
-            os.remove(audio_temp_file)
-            #print(f"Archivo temporal '{audio_temp_file}' borrado.")
+
+    def _print_device_info(self):
+        """Print information about the device being used."""
+        if self.dispositivo == "cuda":
+            print("Usando la 🔝")  # Using GPU
+        else:
+            print("Usando la cpu😒")  # Using CPU
+
+    def _load_whisper_model(self):
+        """Load the Whisper model."""
+        return whisper.load_model(name=self.modelo, device=self.dispositivo)
+
+    def _perform_transcription(self, model, audio_path):
+        """Perform audio transcription using the loaded model."""
+        result = model.transcribe(audio_path)  # Optional: add language="es" if needed
+        transcripcion = result["text"]
+        print(f"Transcripción final: \033[1m{transcripcion}\033[0m")
+        return transcripcion
+
+    def _cleanup_temp_files(self):
+        """Clean up temporary files created during transcription."""
+        import os
+
+        temp_files = ["temp.wav", "audioTemporal.mp3"]
+
+        for file in temp_files:
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                    # Uncomment for debugging: print(f"Archivo temporal '{file}' borrado.")
+                except OSError as e:
+                    print(f"Error al eliminar archivo temporal '{file}': {e}")
+
+    def _ask_delete_file(self, path):
+        """Ask the user if they want to delete the original file."""
+        while True:
+            response = input(f"¿Desea borrar el archivo '{path}'? (s/n): ").lower()
+            if response == 's':
+                return True
+            elif response == 'n':
+                print("El archivo no será borrado.")
+                return False
+            else:
+                print("Por favor, ingrese 's' para sí o 'n' para no.")
+
+    def _delete_file(self, path):
+        """Delete the specified file."""
+        import os
+
+        try:
+            os.remove(path)
+            print(f"Archivo '{path}' borrado exitosamente.")
+        except OSError as e:
+            print(f"Error al borrar el archivo: {e}")
