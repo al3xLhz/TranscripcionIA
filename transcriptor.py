@@ -4,7 +4,7 @@ from pydub import AudioSegment
 import whisper
 import time
 import warnings
-import keyboard
+#import keyboard
 from utils import audio_to_mp3#import get_audiofile, audio_to_mp3
 import wave
 import keyboard
@@ -116,6 +116,7 @@ class TranscriptorIA():
         warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
         # Cargar el modelo de Whisper
+        print("El dispositivo es: ",self.dispositivo)
         model = whisper.load_model(name=self.modelo, device=self.dispositivo)
 
         # Transcribir el audio completo

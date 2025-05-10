@@ -4,6 +4,7 @@ import time
 import os
 #from utils import limpiar_consola
 import argparse
+import torch
 
 
 def menu(transcriptor, opcion: str):
@@ -20,6 +21,11 @@ def menu(transcriptor, opcion: str):
 
 
 def main():
+
+    if torch.cuda.is_available():
+        print(f"✅ GPU detectada: {torch.cuda.get_device_name(0)}")
+    else:
+        print("⚠️ No se detectó GPU. El procesamiento usará CPU.")
 
     transcriptor = TranscriptorIA()
 
