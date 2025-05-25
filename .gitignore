@@ -3,4 +3,5 @@
 Dockerfile
 __pycache__*
 Audio
+*.pyc
 
