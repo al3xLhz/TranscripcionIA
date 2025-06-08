@@ -2,9 +2,9 @@ from transcriptor import TranscriptorIA
 import argparse
 import os
 # 1. Iniciar Docker
-# 2. Comando 'docker ps -a' para ver los contenedores
-# 3. Comando 'docker start <id-contenedor>' para iniciar el contenedor
-# 4. Comando 'docker exec -it <id-contenedor> bash' para acceder al contenedor
+# 2. Comando 'docker ps -a' para ver los contenedores a732ff13f866
+# 3. Comando 'docker start a732ff13f866' para iniciar el contenedor
+# 4. Comando 'docker exec -it a732ff13f866 bash' para acceder al contenedor
 # 5. Comando 'python app.py' para ejecutar el script
 def parse_arguments():
     """Parse command line arguments for model selection."""
@@ -23,7 +23,7 @@ def initialize_transcriptor(model_type):
     return TranscriptorIA(model_type)
 
 def main():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    #os.system('cls' if os.name == 'nt' else 'clear')
     #if torch.cuda.is_available():
     #    print(f"✅ GPU detectada: {torch.cuda.get_device_name(0)}")
     #else:

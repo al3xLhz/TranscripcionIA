@@ -56,8 +56,8 @@ class TranscriptorIA:
         self._mostrar_tiempo_ejecucion(start_time)
         self._cleanup_temp_files()
 
-        if self._ask_delete_file(path):
-            self._delete_file(path)
+        #!if self._ask_delete_file(path):
+        #self._delete_file(path)
 
 
     def _configurar_advertencias(self):
@@ -81,7 +81,7 @@ class TranscriptorIA:
         """Realiza la transcripción del audio."""
         result = model.transcribe(audio_path)
         transcripcion = result["text"]
-        print(f"Transcripción final: {self.BOLD}{transcripcion}{self.RESET}")
+        print(f"Transcripción final: {transcripcion}")
         return transcripcion
 
     def _mostrar_tiempo_ejecucion(self, start_time):
